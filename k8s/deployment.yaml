@@ -14,11 +14,11 @@ spec:
     spec:
       serviceAccountName: python-demo-sa
       automountServiceAccountToken: false
-      imagePullSecrets:
-        - name: jfrog-registry-secret
+      # imagePullSecrets:        # ❌ Not needed for Docker Hub (public images)
+      #   - name: jfrog-registry-secret
       containers:
         - name: python-demo
-          image: IMAGE_PLACEHOLDER  # NOSONAR
+          image: IMAGE_PLACEHOLDER   # Jenkins will replace this with Docker Hub image
           ports:
             - containerPort: 3001
           resources:
@@ -40,4 +40,4 @@ spec:
               mountPath: /app/data
       volumes:
         - name: app-storage
-          emptyDir: {}  # Or use `persistentVolumeClaim` if needed
+          emptyDir: {}
