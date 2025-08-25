@@ -114,13 +114,13 @@ stage('Push Docker Image to Docker Hub') {
                         sed "s|IMAGE_PLACEHOLDER|$IMAGE_NAME:$TAG|g" k8s/deployment.yaml > k8s/deploy-temp.yaml
         
                         # Apply deployment (keeps existing service/ingress unchanged)
-                        kubectl apply -f k8s/deploy-temp.yaml
+                        sudo kubectl apply -f k8s/deploy-temp.yaml
         
                         # Restart deployment if same tag is reused (optional but safe)
-                        kubectl rollout restart deployment/python-demo
+                        sudo kubectl rollout restart deployment/python-demo
         
                         # Wait for rollout to complete
-                        kubectl rollout status deployment/python-demo
+                        sudo kubectl rollout status deployment/python-demo
         
                         # Smoke test via public URL (Nginx exposed)
                         echo "Testing http://20.109.16.207:32256/"
