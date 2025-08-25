@@ -5,7 +5,8 @@ pipeline {
         APP_PORT = "3001"
         JFROG_REGISTRY = "trialsnmz2e.jfrog.io"
         JFROG_REPO = "python-demo-app"
-        IMAGE_NAME = "${JFROG_REGISTRY}/${JFROG_REPO}/python-demo"
+        //IMAGE_NAME = "${JFROG_REGISTRY}/${JFROG_REPO}/python-demo"
+        IMAGE_NAME = charan30/python-demo-app
         TAG = "${BUILD_NUMBER}"
         COVERAGE_FILE = "coverage.xml"
         COVERAGE_ARTIFACT_PATH = "coverage/coverage-${BUILD_NUMBER}.xml"
