@@ -61,7 +61,7 @@ pipeline {
 
                 }
             }
-
+/*
           stage('Publish Artifacts to JFrog') {
             parallel {
                 stage('Push Docker Image') {
@@ -86,6 +86,20 @@ pipeline {
                                   "https://$JFROG_REGISTRY/artifactory/$JFROG_REPO/$COVERAGE_ARTIFACT_PATH"
                             '''
                         }
+                    }
+                }
+            }
+        }
+   */
+
+stage('Push Docker Image to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    timeout(time: 2, unit: 'MINUTES') {
+                        sh '''
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker push $IMAGE_NAME:$TAG
+                        '''
                     }
                 }
             }
