@@ -27,7 +27,7 @@ pipeline {
             }
         }
 
-        stage('Parallel: Unit Tests & Code Quality') {
+                stage('Parallel: Unit Tests & Code Quality') {
             parallel {
                 stage('Run Unit Tests + Coverage') {
                     steps {
@@ -61,7 +61,6 @@ pipeline {
 
                 }
             }
-        }
 
           stage('Publish Artifacts to JFrog') {
             parallel {
