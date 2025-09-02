@@ -114,11 +114,11 @@ pipeline {
                 def failedStage = currentBuild.description ?: "Unknown Stage"
                 echo "❌ Stage Failed: ${failedStage}. Creating Jira Issue..."
 
-                withCredentials([string(credentialsId: 'jira-api-token', variable: 'JIRA_TOKEN')]) {
+                withCredentials([usernamePassword(credentialsId: 'jira-api-token', usernameVariable: 'JIRA_USER', passwordVariable: 'JIRA_TOKEN')]) {
                     sh """
                         curl -X POST \
                           -H "Content-Type: application/json" \
-                          -u "charanv@devtools.in:${JIRA_TOKEN}" \
+                          -u "$JIRA_USER:$JIRA_TOKEN" \
                           --data '{
                             "fields": {
                                "project": { "key": "${JIRA_PROJECT_KEY}" },
