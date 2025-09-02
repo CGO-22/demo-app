@@ -32,7 +32,7 @@ pipeline {
                 script { env.FAILED_STAGE = "Build Docker Image" }
                 timeout(time: 5, unit: 'MINUTES') {
                     retry(2) {
-                        sh 'docker build -t $IMAGE_NAME:$TAG .'
+                        sh 'docker builds -t $IMAGE_NAME:$TAG .'
                     }
                 }
             }
