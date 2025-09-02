@@ -1,6 +1,8 @@
 pipeline {
     agent any
-
+     triggers {
+        githubPush()   // 🚀 This tells Jenkins to listen to GitHub webhooks
+    }
     environment {
         APP_PORT = "3001"
         JFROG_REGISTRY = "trialsnmz2e.jfrog.io"
