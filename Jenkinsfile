@@ -31,7 +31,7 @@ pipeline {
                 timeout(time: 5, unit: 'MINUTES') {
                     retry(2) {
                         // typo fixed: was `docker builds`
-                        sh 'docker builds -t $IMAGE_NAME:$TAG .'
+                        sh 'docker build -t $IMAGE_NAME:$TAG .'
                     }
                 }
             }
