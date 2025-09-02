@@ -115,21 +115,39 @@ pipeline {
                 echo "❌ Stage Failed: ${failedStage}. Creating Jira Issue..."
 
                 withCredentials([usernamePassword(credentialsId: 'jira-api-token', usernameVariable: 'JIRA_USER', passwordVariable: 'JIRA_TOKEN')]) {
-                    sh """
-                        curl -X POST \
-                          -H "Content-Type: application/json" \
-                          -u "$JIRA_USER:$JIRA_TOKEN" \
-                          --data '{
-                            "fields": {
-                               "project": { "key": "${JIRA_PROJECT_KEY}" },
-                               "summary": "Pipeline Failed at Stage: ${failedStage} (Build #${BUILD_NUMBER})",
-                               "description": "Jenkins pipeline failed at stage: ${failedStage}.\\n\\nCheck logs: ${BUILD_URL}",
-                               "issuetype": { "name": "Bug" }
-                            }
-                          }' \
-                          ${JIRA_BASE_URL}/rest/api/3/issue
-                    """
-                }
+    sh '''
+        curl -X POST \
+          -H "Content-Type: application/json" \
+          -u "$JIRA_USER:$JIRA_TOKEN" \
+          --data "{
+            \\"fields\\": {
+               \\"project\\": { \\"key\\": \\"${JIRA_PROJECT_KEY}\\" },
+               \\"summary\\": \\"Pipeline Failed at Stage: ${failedStage} (Build #${BUILD_NUMBER})\\",
+               \\"description\\": {
+                   \\"type\\": \\"doc\\",
+                   \\"version\\": 1,
+                   \\"content\\": [
+                       {
+                           \\"type\\": \\"paragraph\\",
+                           \\"content\\": [
+                               { \\"type\\": \\"text\\", \\"text\\": \\"Jenkins pipeline failed at stage: ${failedStage}.\\" }
+                           ]
+                       },
+                       {
+                           \\"type\\": \\"paragraph\\",
+                           \\"content\\": [
+                               { \\"type\\": \\"text\\", \\"text\\": \\"Check logs: ${BUILD_URL}\\" }
+                           ]
+                       }
+                   ]
+               },
+               \\"issuetype\\": { \\"name\\": \\"Bug\\" }
+            }
+          }" \
+          ${JIRA_BASE_URL}/rest/api/3/issue
+    '''
+}
+
             }
         }
     }
