@@ -10,16 +10,24 @@ pipeline {
         TAG = "${BUILD_NUMBER}"
         COVERAGE_FILE = "coverage.xml"
         COVERAGE_ARTIFACT_PATH = "coverage/coverage-${BUILD_NUMBER}.xml"
+
+        JIRA_BASE_URL = "https://charan-s-v.atlassian.net/"
+        JIRA_PROJECT_KEY = "DEVOPS"  
+        FAILED_STAGE = ""
+
+        
     }
 
     stages {
           stage('Install Python Dependencies') {
             steps {
+                script { env.FAILED_STAGE = "Install Python Dependencies" }
                 sh 'pip install -r requirements.txt'
             }
         }
         stage('Build Docker Image') {
             steps {
+                script { env.FAILED_STAGE = "Build Docker Image" }
                 timeout(time: 5, unit: 'MINUTES') {
                     retry(2) {
                         sh 'docker build -t $IMAGE_NAME:$TAG .'
@@ -32,6 +40,7 @@ pipeline {
             parallel {
                 stage('Run Unit Tests + Coverage') {
                     steps {
+                        script { env.FAILED_STAGE = "Run Unit Tests + Coverage" }
                         timeout(time: 3, unit: 'MINUTES') {
                             sh '''
                                 export PATH=$PATH:/var/lib/jenkins/.local/bin
@@ -46,6 +55,7 @@ pipeline {
 
                 stage('Code Quality - SonarCloud') {
                 steps {
+                    script { env.FAILED_STAGE = "Code Quality - SonarCloud" }
                     withCredentials([string(credentialsId: 'sonarcloud-token1', variable: 'SONAR_TOKEN')]) {
                         sh '''
                             /opt/sonar-scanner/bin/sonar-scanner \
@@ -67,6 +77,7 @@ pipeline {
             parallel {
                 stage('Push Docker Image') {
                     steps {
+                        
                         withCredentials([usernamePassword(credentialsId: 'jfrog-cred', usernameVariable: 'JFROG_USER', passwordVariable: 'JFROG_PASS')]) {
                             timeout(time: 2, unit: 'MINUTES') {
                                 sh '''
@@ -95,6 +106,7 @@ pipeline {
 
 stage('Push Docker Image to Docker Hub') {
             steps {
+                script { env.FAILED_STAGE = "Push Docker Image to Docker Hub" }
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     timeout(time: 2, unit: 'MINUTES') {
                         sh '''
@@ -108,6 +120,7 @@ stage('Push Docker Image to Docker Hub') {
         
        stage('Deploy to Kubernetes & Smoke Test') {
             steps {
+                script { env.FAILED_STAGE = "Deploy to Kubernetes & Smoke Test" }
                 timeout(time: 4, unit: 'MINUTES') {
                     sh '''
                         # Replace image in deployment YAML with the new tag
@@ -138,7 +151,24 @@ stage('Push Docker Image to Docker Hub') {
             echo "🎉 Build, test, and Kubernetes deployment successful!"
         }
         failure {
-            echo "❌ Something failed. Check logs."
+           echo "❌ Stage Failed: $FAILED_STAGE. Creating Jira Issue..."
+
+            withCredentials([string(credentialsId: 'jira-api-token', variable: 'JIRA_TOKEN')]) {
+                sh '''
+                    curl -X POST \
+                      -H "Content-Type: application/json" \
+                      -u "charanv@devtools.in:$JIRA_TOKEN" \
+                      --data "{
+                        \\"fields\\": {
+                           \\"project\\": { \\"key\\": \\"$JIRA_PROJECT_KEY\\" },
+                           \\"summary\\": \\"Pipeline Failed at Stage: $FAILED_STAGE (Build #$BUILD_NUMBER)\\",
+                           \\"description\\": \\"Jenkins pipeline failed at stage: $FAILED_STAGE.\\n\\nCheck logs: $BUILD_URL\\",
+                           \\"issuetype\\": { \\"name\\": \\"Bug\\" }
+                        }
+                      }" \
+                      $JIRA_BASE_URL/rest/api/3/issue
+                '''
+            }
         }
     }
 }
